@@ -150,6 +150,10 @@ function getClosureCompilerCommand(exportsFile, outputFile) {
     `--js=${exportsFile}`,
     '--generate_exports',
     `--compilation_level=${compilationLevel}`,
+    `--formatting=PRETTY_PRINT`,
+    '--debug',
+    `--create_source_map=${outputFile}.map`,
+    `--source_map_include_content`,
     '--export_local_property_definitions',
     `--entry_point=${exportsFile}`, `> ${outputFile}`
   ].join(' ');
