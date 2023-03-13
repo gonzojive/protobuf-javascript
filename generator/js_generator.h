@@ -366,8 +366,7 @@ class PROTOC_EXPORT Generator : public CodeGenerator {
                         const Descriptor* desc) const;
   void GenerateOneofCaseDefinition(const GeneratorOptions& options,
                                    io::Printer* printer,
-                                   const OneofDescriptor* oneof,
-                                   const Descriptor* desc) const;
+                                   const OneofDescriptor* oneof) const;
   void GenerateObjectTypedef(const GeneratorOptions& options,
                              io::Printer* printer,
                              const Descriptor* desc) const;

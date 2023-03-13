@@ -2237,7 +2237,7 @@ void Generator::GenerateClassFieldInfo(const GeneratorOptions& options,
       if (IgnoreOneof(desc->oneof_decl(i))) {
         continue;
       }
-      GenerateOneofCaseDefinition(options, printer, desc->oneof_decl(i), desc);
+      GenerateOneofCaseDefinition(options, printer, desc->oneof_decl(i));
     }
   }
 }
@@ -2254,7 +2254,7 @@ void Generator::GenerateClassXid(const GeneratorOptions& options,
 
 void Generator::GenerateOneofCaseDefinition(
     const GeneratorOptions& options, io::Printer* printer,
-    const OneofDescriptor* oneof, const Descriptor* desc) const {
+    const OneofDescriptor* oneof) const {
 
   const std::string className = GetMessagePath(options, oneof->containing_type());
 
@@ -2302,7 +2302,7 @@ void Generator::GenerateOneofCaseDefinition(
       "() {\n"
       "  return /** @type {$class$.$oneof$Case} */(jspb.Message."
       "computeOneofCase(this, $class$.oneofGroups_[$oneofindex$]));\n",
-      "class", desc->name(),
+      "class", oneof->containing_type()->name(),
       "oneof", JSOneofName(oneof),
       "oneofindex", JSOneofIndex(oneof));
   GenerateMethodEnd(options, printer);
