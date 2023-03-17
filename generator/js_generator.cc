@@ -3109,7 +3109,7 @@ const char * methodEndBrace = options.WantEs6() ? "}" : "};";
   if (HasFieldPresence(options, field)) {
     const std::string haserName = "has" + JSGetterName(options, field);
     const std::string haserMethodStart = MethodStart(
-      options, classSymbol.c_str(), clearerName.c_str());
+      options, classSymbol.c_str(), haserName.c_str());
 
     printer->Print(
         "/**\n"
