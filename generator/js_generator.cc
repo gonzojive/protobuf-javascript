@@ -3672,9 +3672,12 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
            : GetNamespace(options, field->file()));
 
   const std::string extension_object_name = JSObjectFieldName(options, field);
-  GenerateClass(options, type_names, printer, nullptr);
-  GenerateClassRegistration(options, type_names, printer, nullptr);
-  GenerateClassFields(options, type_names, printer, nullptr);
+
+  const Descriptor* desc = field->file()->message_type(0);
+
+  GenerateClass(options, type_names, printer, desc);
+  GenerateClassRegistration(options, type_names, printer, desc);
+  GenerateClassFields(options, type_names, printer, desc);
   printer->Print(
       "\n"
       //"class ExtendedClass extends $class$ {}\n"
