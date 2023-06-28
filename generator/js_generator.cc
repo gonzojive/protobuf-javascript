@@ -3736,7 +3736,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   printer->Print(
       "// This registers the extension field with the extended class, so that\n"
       "// toObject() will function correctly.\n"
-      "$extendName$[$index$] = $class$.$name$;\n"
+      //"$extendName$[$index$] = $class$.$name$;\n"
+      "ExtendedMethodOptions.extensions[$index$] = $class$.$name$;\n"
       "\n",
       "extendName",
       JSExtensionsObjectName(options, field->file(), field->containing_type()),
