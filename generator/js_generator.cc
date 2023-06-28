@@ -3672,9 +3672,12 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
            : GetNamespace(options, field->file()));
 
   const std::string extension_object_name = JSObjectFieldName(options, field);
+  GenerateClass(options, type_names, printer, field);
+  GenerateClassRegistration(options, type_names, printer, field);
+  GenerateClassFields(options, type_names, printer, field);
   printer->Print(
       "\n"
-      "class ExtendedClass extends $class$ {}\n"
+      //"class ExtendedClass extends $class$ {}\n"
       "class ExtendedMethodOptions extends proto.google.protobuf.MethodOptions {}\n"
       "/**\n"
       " * A tuple of {field number, class constructor} for the extension\n"
