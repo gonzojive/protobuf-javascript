@@ -3675,7 +3675,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   printer->Print(
       "\n"
       "class ExtendedClass extends $class$ {}\n"
-      "class ExtendedMethodOptions extends $extendName$ {}\n"
+      "class ExtendedMethodOptions extends proto.google.protobuf.MethodOptions {}\n"
       "/**\n"
       " * A tuple of {field number, class constructor} for the extension\n"
       " * field named `$nameInComment$`.\n"
@@ -3709,8 +3709,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   printer->Print(
       "\n"
-      //"ExtendedMethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
-      "$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
+      "ExtendedMethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
+      //"$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
       "    $binaryWriterFn$,\n"
