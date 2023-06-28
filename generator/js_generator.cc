@@ -3676,7 +3676,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   const Descriptor* desc = field->file()->message_type(0);
   // GenerateClass(options, type_names, printer, desc);
   //GenerateClassRegistration(options, type_names, printer, desc);
-  GenerateClassFields(options, type_names, printer, desc);
+  //GenerateClassFields(options, type_names, printer, desc);
   printer->Print(
       "\n"
       //"class ExtendedClass extends $class$ {}\n"
