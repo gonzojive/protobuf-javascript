@@ -3682,7 +3682,6 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // GenerateClassEs6(options, type_names, printer, desc);
 
   printer->Print(
-      "// $expr$\n"
       "\n"
       "/**\n"
       " * A tuple of {field number, class constructor} for the extension\n"
@@ -3693,7 +3692,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       //"$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
       "var foo = new jspb.ExtensionFieldInfo(\n",
       "nameInComment", extension_object_name, "name", extension_object_name,
-      "class", extension_scope, "expr", expr, "extensionType", 
+      "class", extension_scope, "extensionType", 
       JSFieldTypeAnnotation(options, field,
                             /* is_setter_argument = */ false,
                             /* force_present = */ true,
