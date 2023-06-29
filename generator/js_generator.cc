@@ -3675,7 +3675,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   const std::string extension_object_name = JSObjectFieldName(options, field);
 
   //This may not even be what I want for extension
-  const Descriptor* desc = field->file()->containing_type(0); //containing_type()
+  const Descriptor* desc = field->file()->message_type(0);
   // how to generate NEW class, not in options?
   // GenerateClassEs6(options, type_names, printer, desc);
   
