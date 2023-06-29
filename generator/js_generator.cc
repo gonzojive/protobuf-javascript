@@ -3685,6 +3685,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // printer->Print(prefix);
   // const std::string expr = JsExpression(desc->full_name());
   // printer->Print("\n\n$expr$\n\n", expr);
+  const std::string expr = GetMessagePath(options, desc);
+  printer->Print("\n\n$expr$\n\n", expr);
   printer->Print(
       "\n"
       "/**\n"
@@ -3693,7 +3695,9 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
       ""
-      "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
+      GetMessagePath(options, to_message)
+      //"$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
+      "var foo = new jspb.ExtensionFieldInfo(\n"
       "nameInComment", extension_object_name, "name", extension_object_name,
       "class", extension_scope, "extensionType", 
       JSFieldTypeAnnotation(options, field,
