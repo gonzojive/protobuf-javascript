@@ -3678,7 +3678,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // how to generate NEW class, not in options?
   // GenerateClassEs6(options, type_names, printer, desc);
   printer->Print("\n\n\n\n");
-  GenerateClassRegistration(options, type_names, printer, desc);
+  //GenerateClassRegistration(options, type_names, printer, desc);
   printer->Print("\n\n\n\n");
   
   printer->Print(
