@@ -3748,6 +3748,9 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   printer->Print(
       "// This registers the extension field with the extended class, so that\n"
       "// toObject() will function correctly.\n"
+      "if(!MethodOptions.extensions) {\n"
+      "    MethodOptions.extensions = [];\n"
+      "}\n"
       //"$extendName$[$index$] = $class$.$name$;\n"
       "MethodOptions.extensions[$index$] = foo;\n" //$class$.$name$;\n"
       "\n",
