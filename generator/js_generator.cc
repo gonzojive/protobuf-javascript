@@ -3679,7 +3679,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // how to generate NEW class, not in options?
   // GenerateClassEs6(options, type_names, printer, desc);
   
-  const prefix = GetMessagePathPrefix(options, desc);
+  const std::string prefix = GetMessagePathPrefix(options, desc);
   printer->Print(prefix);
   printer->Print(
       "\n"
