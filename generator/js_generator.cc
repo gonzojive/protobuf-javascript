@@ -2030,6 +2030,7 @@ void Generator::GenerateClass(const GeneratorOptions& options,
 
     if (options.import_style != GeneratorOptions::kImportClosure) {
       for (int i = 0; i < desc->extension_count(); i++) {
+        printer->Print("//about to generate extension\n");
         GenerateExtension(options, type_names, printer, desc->extension(i));
       }
     }
@@ -3674,10 +3675,10 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   const std::string extension_object_name = JSObjectFieldName(options, field);
 
   const Descriptor* desc = field->file()->message_type(0);
-  // GenerateClass(options, type_names, printer, desc);
+  // how to generate NEW class, not in options?
+  // GenerateClassEs6(options, type_names, printer, desc);
   printer->Print("\n\n\n\n");
   GenerateClassRegistration(options, type_names, printer, desc);
-  GenerateClassFields(options, type_names, printer, desc);
   printer->Print("\n\n\n\n");
   
   printer->Print(
@@ -3690,7 +3691,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
       //"ExtendedClass.$name$ = new jspb.ExtensionFieldInfo(\n",
-      "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
+      "$classname$ = new jspb.ExtensionFieldInfo(\n",
       "nameInComment", extension_object_name, "name", extension_object_name,
       "class", extension_scope, "extensionType",
       JSFieldTypeAnnotation(options, field,
