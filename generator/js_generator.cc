@@ -3675,12 +3675,14 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   const Descriptor* desc = field->file()->message_type(0);
   // GenerateClass(options, type_names, printer, desc);
+  printer->Print("\n\n\n\n");
   GenerateClassRegistration(options, type_names, printer, desc);
+  printer->Print("\n\n\n\n");
   //GenerateClassFields(options, type_names, printer, desc);
   printer->Print(
       "\n"
       //"class ExtendedClass extends $class$ {}\n"
-      "class ExtendedMethodOptions extends proto.google.protobuf.MethodOptions {}\n"
+      //"class ExtendedMethodOptions extends proto.google.protobuf.MethodOptions {}\n"
       "/**\n"
       " * A tuple of {field number, class constructor} for the extension\n"
       " * field named `$nameInComment$`.\n"
