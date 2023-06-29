@@ -3685,7 +3685,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // printer->Print(prefix);
   // const std::string expr = JsExpression(desc->full_name());
   // printer->Print("\n\n$expr$\n\n", expr);
-  const std::string expr = GetMessagePath(options, desc);
+  const std::string expr = GetPrefix(options, field->file(), desc->containing_type());
   //printer->Print(expr);
   printer->Print(
       "// $expr$\n"
