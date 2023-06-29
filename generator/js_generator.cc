@@ -3683,8 +3683,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   
   // const std::string prefix = GetMessagePathPrefix(options, desc);
   // printer->Print(prefix);
-  const std::string expr = JsExpression(desc->full_name());
-  printer->Print("\n\n$expr$\n\n", expr);
+  // const std::string expr = JsExpression(desc->full_name());
+  // printer->Print("\n\n$expr$\n\n", expr);
   printer->Print(
       "\n"
       "/**\n"
