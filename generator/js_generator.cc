@@ -3689,8 +3689,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
       ""
-      //"ExtendedClass.$name$ = new jspb.ExtensionFieldInfo(\n",
-      "$classname$ = new jspb.ExtensionFieldInfo(\n",
+      "ExtendedClass.$name$ = new jspb.ExtensionFieldInfo(\n",
       "nameInComment", extension_object_name, "name", extension_object_name,
       "class", extension_scope, "extensionType", 
       JSFieldTypeAnnotation(options, field,
