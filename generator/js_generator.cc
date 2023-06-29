@@ -3680,14 +3680,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // printer->Print("\n\n", alias, "\n\n");
   // how to generate NEW class, not in options?
   // GenerateClassEs6(options, type_names, printer, desc);
-  
-  // const std::string prefix = GetMessagePathPrefix(options, desc);
-  // printer->Print(prefix);
-  // const std::string expr = JsExpression(desc->full_name());
-  // printer->Print("\n\n$expr$\n\n", expr);
-  const std::string expr = GetPrefix(options, field->file(), desc->containing_type());
-  //printer->Print(expr);
-  printer->Print("goog.require('$name$');\n", "name", extension_object_name);
+
   printer->Print(
       "// $expr$\n"
       "\n"
