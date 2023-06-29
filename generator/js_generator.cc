@@ -3679,6 +3679,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // how to generate NEW class, not in options?
   // GenerateClassEs6(options, type_names, printer, desc);
   
+  const prefix = GetMessagePathPrefix(options, desc);
+  printer->Print(prefix);
   printer->Print(
       "\n"
       "/**\n"
@@ -3686,9 +3688,10 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * field named `$nameInComment$`.\n"
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
+      ""
       //"ExtendedClass.$name$ = new jspb.ExtensionFieldInfo(\n",
       "$classname$ = new jspb.ExtensionFieldInfo(\n",
-      "nameInComment", extension_object_name, "classname", desc->name(), //"name", extension_object_name,
+      "nameInComment", extension_object_name, "name", extension_object_name,
       "class", extension_scope, "extensionType", 
       JSFieldTypeAnnotation(options, field,
                             /* is_setter_argument = */ false,
