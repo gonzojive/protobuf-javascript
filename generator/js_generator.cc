@@ -3695,7 +3695,6 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
       ""
-      GetMessagePath(options, to_message)
       //"$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
       "var foo = new jspb.ExtensionFieldInfo(\n"
       "nameInComment", extension_object_name, "name", extension_object_name,
