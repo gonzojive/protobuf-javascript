@@ -3687,6 +3687,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // printer->Print("\n\n$expr$\n\n", expr);
   const std::string expr = GetPrefix(options, field->file(), desc->containing_type());
   //printer->Print(expr);
+  printer->Print("goog.require('$name$');\n", "name", extension_object_name);
   printer->Print(
       "// $expr$\n"
       "\n"
