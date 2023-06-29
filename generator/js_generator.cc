@@ -3718,6 +3718,9 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   printer->Print(
       "\n"
+      "if(!MethodOptions.extensionBinary) {\n"
+      "    MethodOptions.extensionBinary = [];\n"
+      "}\n"
       "MethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       //"$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    foo,\n"//"    $class$.$name$,\n"
@@ -3746,7 +3749,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "// This registers the extension field with the extended class, so that\n"
       "// toObject() will function correctly.\n"
       //"$extendName$[$index$] = $class$.$name$;\n"
-      "ExtendedMethodOptions.extensions[$index$] = foo;\n" //$class$.$name$;\n"
+      "MethodOptions.extensions[$index$] = foo;\n" //$class$.$name$;\n"
       "\n",
       "extendName",
       JSExtensionsObjectName(options, field->file(), field->containing_type()),
