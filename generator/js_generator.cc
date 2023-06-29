@@ -3674,17 +3674,13 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   const std::string extension_object_name = JSObjectFieldName(options, field);
 
-  const Descriptor* desc = field->file()->message_type(0);
+  //This may not even be what I want for extension
+  const Descriptor* desc = field->file()->containing_type(); //containing_type()
   // how to generate NEW class, not in options?
   // GenerateClassEs6(options, type_names, printer, desc);
-  printer->Print("\n\n\n\n");
-  GenerateClassRegistration(options, type_names, printer, desc);
-  printer->Print("\n\n\n\n");
   
   printer->Print(
       "\n"
-      "class ExtendedClass extends $class$ {}\n //$nameInComment$"
-      //"class ExtendedMethodOptions extends proto.google.protobuf.MethodOptions {}\n"
       "/**\n"
       " * A tuple of {field number, class constructor} for the extension\n"
       " * field named `$nameInComment$`.\n"
