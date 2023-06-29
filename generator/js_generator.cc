@@ -4156,7 +4156,7 @@ void Generator::GenerateFile(const GeneratorOptions& options,
 
   // Generate "require" statements.
   if (options.import_style == GeneratorOptions::kImportEs6) {
-    printer->Print("import jspb from \"google-protobuf\";\n");
+    printer->Print("import jspb, MethodOptions from \"google-protobuf\";\n");
 
     for (int i = 0; i < file->dependency_count(); i++) {
       std::string aliases_comma_delimited =
