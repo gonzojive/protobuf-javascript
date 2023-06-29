@@ -3677,8 +3677,9 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   // GenerateClass(options, type_names, printer, desc);
   printer->Print("\n\n\n\n");
   GenerateClassRegistration(options, type_names, printer, desc);
+  GenerateClassFields(options, type_names, printer, desc);
   printer->Print("\n\n\n\n");
-  //GenerateClassFields(options, type_names, printer, desc);
+  
   printer->Print(
       "\n"
       //"class ExtendedClass extends $class$ {}\n"
