@@ -3683,7 +3683,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   
   printer->Print(
       "\n"
-      //"class ExtendedClass extends $class$ {}\n"
+      "class ExtendedClass extends $class$ {}\n //$nameInComment$"
       //"class ExtendedMethodOptions extends proto.google.protobuf.MethodOptions {}\n"
       "/**\n"
       " * A tuple of {field number, class constructor} for the extension\n"
@@ -3692,8 +3692,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " */\n"
       //"ExtendedClass.$name$ = new jspb.ExtensionFieldInfo(\n",
       "$classname$ = new jspb.ExtensionFieldInfo(\n",
-      "nameInComment", extension_object_name, "name", extension_object_name,
-      "class", extension_scope, "extensionType", "classname", desc->name(),
+      "nameInComment", extension_object_name, "classname", desc->name(), //"name", extension_object_name,
+      "class", extension_scope, "extensionType", 
       JSFieldTypeAnnotation(options, field,
                             /* is_setter_argument = */ false,
                             /* force_present = */ true,
