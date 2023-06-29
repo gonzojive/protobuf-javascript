@@ -3676,7 +3676,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   //This may not even be what I want for extension
   const Descriptor* desc = field->file()->message_type(0);
-  const std::string alias = type_names->Es6TypeName();
+  const std::string alias = TypeNames::Es6TypeName();
   printer->Print("\n\n", alias, "\n\n");
   // how to generate NEW class, not in options?
   // GenerateClassEs6(options, type_names, printer, desc);
