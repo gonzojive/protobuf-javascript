@@ -3676,13 +3676,15 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   //This may not even be what I want for extension
   const Descriptor* desc = field->file()->message_type(0);
-  const std::string alias = TypeNames::Es6TypeName();
-  printer->Print("\n\n", alias, "\n\n");
+  // const std::string alias = TypeNames::Es6TypeName();
+  // printer->Print("\n\n", alias, "\n\n");
   // how to generate NEW class, not in options?
   // GenerateClassEs6(options, type_names, printer, desc);
   
   // const std::string prefix = GetMessagePathPrefix(options, desc);
   // printer->Print(prefix);
+  const expr = std::string TypeNames::JsExpression(desc) 
+  printer->Print("\n\n" + alias + "\n\n");
   printer->Print(
       "\n"
       "/**\n"
@@ -3746,8 +3748,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   printer->Print(
       "// This registers the extension field with the extended class, so that\n"
       "// toObject() will function correctly.\n"
-      //"$extendName$[$index$] = $class$.$name$;\n"
-      "ExtendedMethodOptions.extensions[$index$] = $class$.$name$;\n"
+      "$extendName$[$index$] = $class$.$name$;\n"
+      //"ExtendedMethodOptions.extensions[$index$] = $class$.$name$;\n"
       "\n",
       "extendName",
       JSExtensionsObjectName(options, field->file(), field->containing_type()),
