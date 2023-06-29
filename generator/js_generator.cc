@@ -3688,7 +3688,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * field named `$nameInComment$`.\n"
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
-      "ExtendedClass.$name$ = new jspb.ExtensionFieldInfo(\n",
+      //"ExtendedClass.$name$ = new jspb.ExtensionFieldInfo(\n",
+      "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
       "nameInComment", extension_object_name, "name", extension_object_name,
       "class", extension_scope, "extensionType",
       JSFieldTypeAnnotation(options, field,
@@ -3716,8 +3717,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   printer->Print(
       "\n"
-      "ExtendedMethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
-      //"$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
+      //"ExtendedMethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
+      "$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
       "    $binaryWriterFn$,\n"
