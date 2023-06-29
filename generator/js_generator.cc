@@ -3697,8 +3697,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
       ""
-      "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
-      //"var foo = new jspb.ExtensionFieldInfo(\n",
+      //"$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
+      "var foo = new jspb.ExtensionFieldInfo(\n",
       "nameInComment", extension_object_name, "name", extension_object_name,
       "class", extension_scope, "expr", expr, "extensionType", 
       JSFieldTypeAnnotation(options, field,
@@ -3726,8 +3726,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   printer->Print(
       "\n"
-      //"ExtendedMethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
-      "$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
+      "MethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
+      //"$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
       "    $binaryWriterFn$,\n"
@@ -3753,8 +3753,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   printer->Print(
       "// This registers the extension field with the extended class, so that\n"
       "// toObject() will function correctly.\n"
-      "$extendName$[$index$] = $class$.$name$;\n"
-      //"ExtendedMethodOptions.extensions[$index$] = $class$.$name$;\n"
+      //"$extendName$[$index$] = $class$.$name$;\n"
+      "ExtendedMethodOptions.extensions[$index$] = foo;\n" //$class$.$name$;\n"
       "\n",
       "extendName",
       JSExtensionsObjectName(options, field->file(), field->containing_type()),
@@ -4156,7 +4156,7 @@ void Generator::GenerateFile(const GeneratorOptions& options,
 
   // Generate "require" statements.
   if (options.import_style == GeneratorOptions::kImportEs6) {
-    printer->Print("import jspb, MethodOptions from \"google-protobuf\";\n");
+    printer->Print("import jspb from \"google-protobuf\";\n");
 
     for (int i = 0; i < file->dependency_count(); i++) {
       std::string aliases_comma_delimited =
