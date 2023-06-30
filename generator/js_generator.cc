@@ -3669,7 +3669,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
                                   const FieldDescriptor* field) const {
   //std::string extension_scope = ImportAliases(TypeNames::Es6TypeNames(options, field->file()), field->file());//GetNamespace(options, field->file());
   std::string extension_scope = TypeNames::JsName(field->file()->extension(0)->full_name());
-  if (field->file()->is_extension()) {
+  if (field->is_extension()) {
     extension_scope = "foobarbaz\n";
   }
   //std::string extension_scope = type_names.JsExpression(field->extension_scope()->full_name());
