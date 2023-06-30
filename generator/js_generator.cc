@@ -3674,6 +3674,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   const std::string extension_object_name = JSObjectFieldName(options, field);
 
+  const std::string classSymbol = options.WantEs6() ? desc->name() : GetMessagePath(options, desc);
   //This may not even be what I want for extension
   // const Descriptor* desc = field->file()->message_type(0);
   // const std::string alias = TypeNames::Es6TypeName();
@@ -3689,10 +3690,10 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
       ""
-      //"$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
-      "var foo = new jspb.ExtensionFieldInfo(\n",
+      "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
+      //"var foo = new jspb.ExtensionFieldInfo(\n",
       "nameInComment", extension_object_name, "name", extension_object_name,
-      "class", extension_scope, "extensionType", 
+      "class", classSymbol, "extensionType", 
       JSFieldTypeAnnotation(options, field,
                             /* is_setter_argument = */ false,
                             /* force_present = */ true,
@@ -3724,7 +3725,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "MethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       //"$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    foo,\n"
-      "    $class$.$name$,\n"
+      //"    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
       "    $binaryWriterFn$,\n"
       "    $binaryMessageSerializeFn$,\n"
