@@ -3667,7 +3667,9 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
                                   const TypeNames& type_names,
                                   io::Printer* printer,
                                   const FieldDescriptor* field) const {
-  std::string extension_scope = TypeNames::Es6TypeNames(options, field->file());//GetNamespace(options, field->file());
+  std::string extension_scope = ImportAliases(TypeNames::Es6TypeNames(options, field->file()), field->file());//GetNamespace(options, field->file());
+      
+      //ImportAliases(type_names, *file->dependency(i))
       // (field->extension_scope()
       //      ? field->extension_scope()->name()
       //      //? GetMessagePath(options, field->extension_scope())
