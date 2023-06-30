@@ -3709,9 +3709,9 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   printer->Print(
       "\n"
-      "if(!$extendName$Binary) {\n"
-      "    $extendName$Binary = [];\n"
-      "}\n"
+      // "if(!$extendName$Binary) {\n"
+      // "    $extendName$Binary = [];\n"
+      // "}\n"
       "$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
@@ -3737,9 +3737,9 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   printer->Print(
       "// This registers the extension field with the extended class, so that\n"
       "// toObject() will function correctly.\n"
-      "if(!$extendName$) {\n"
-      "    $extendName$ = [];\n"
-      "}\n"
+      // "if(!$extendName$) {\n"
+      // "    $extendName$ = [];\n"
+      // "}\n"
       "$extendName$[$index$] = $class$.$name$;\n"
       "\n",
       "extendName", extend_name, "index", StrCat(field->number()),
