@@ -3713,7 +3713,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "if(!$extendName$Binary) {\n"
       "    $extendName$Binary = [];\n"
       "}\n"
-      "$extendName$.Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
+      "$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
       "    $binaryWriterFn$,\n"
