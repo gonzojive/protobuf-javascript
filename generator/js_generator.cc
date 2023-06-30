@@ -3669,7 +3669,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
                                   const FieldDescriptor* field) const {
   std::string extension_scope =
       (field->extension_scope()
-           ? GetMessagePath(options, field->extension_scope())
+           ? field->extension_scope()->name() //GetMessagePath(options, field->extension_scope())
            : GetNamespace(options, field->file()));
 
   const std::string extension_object_name = JSObjectFieldName(options, field);
@@ -3693,7 +3693,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
       //"var foo = new jspb.ExtensionFieldInfo(\n",
       "nameInComment", extension_object_name, "name", extension_object_name,
-      "class", classSymbol, "extensionType", 
+      "class", extension_scope, "extensionType", 
       JSFieldTypeAnnotation(options, field,
                             /* is_setter_argument = */ false,
                             /* force_present = */ true,
