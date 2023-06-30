@@ -2071,7 +2071,7 @@ void Generator::GenerateClassEs6(const GeneratorOptions& options,
 
   printer->Indent();
 
-  GenerateClassConstructor(options, printer, desc);
+  GenerateClassConstructorAndDeclareExtensionFieldInfo(options, printer, desc);
 
   GenerateClassFieldInfo(options, printer, desc);
 
