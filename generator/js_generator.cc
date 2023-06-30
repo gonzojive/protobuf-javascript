@@ -3675,7 +3675,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   const std::string extension_object_name = JSObjectFieldName(options, field);
 
-  const std::string classSymbol = options.WantEs6() ? field->extension_scope()->name() : GetMessagePath(options, field->extension_scope());
+  //const std::string classSymbol = options.WantEs6() ? field->extension_scope()->name() : GetMessagePath(options, field->extension_scope());
   //This may not even be what I want for extension
   // const Descriptor* desc = field->file()->message_type(0);
   // const std::string alias = TypeNames::Es6TypeName();
