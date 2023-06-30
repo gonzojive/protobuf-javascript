@@ -3763,7 +3763,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       // "if(!MethodOptions.extensions) {\n"
       // "    MethodOptions.extensions = [];\n"
       // "}\n"
-      "$extendName$[$index$] = $class$.$name$;\n"
+      "$extendName$.extensions[$index$] = $class$.$name$;\n"
       //"MethodOptions.extensions[$index$] = $class$.$name$;\n"
       "\n",
       "extendName",
