@@ -2181,12 +2181,6 @@ void Generator::GenerateClassConstructorAndDeclareExtensionFieldInfo(
       GenerateClassExtensionFieldInfo(options, printer, desc);
     }
   }
-  for (int i = 0; i < desc->nested_type_count(); i++) {
-    if (!IgnoreMessage(desc->nested_type(i))) {
-      GenerateClassConstructorAndDeclareExtensionFieldInfo(
-          options, printer, desc->nested_type(i));
-    }
-  }
 }
 
 void Generator::GenerateClassFieldInfo(const GeneratorOptions& options,
@@ -3238,9 +3232,8 @@ void Generator::GenerateClassExtensionFieldInfo(const GeneratorOptions& options,
         " *\n"
         " * @type {!Object<number, jspb.ExtensionFieldInfo>}\n"
         " */\n"
-        "$class$.extensions = {};\n"
-        "\n",
-        "class", GetMessagePath(options, desc));
+        "static extensions = {};\n"
+        "\n");
 
     printer->Print(
         "\n"
@@ -3259,9 +3252,8 @@ void Generator::GenerateClassExtensionFieldInfo(const GeneratorOptions& options,
         " *\n"
         " * @type {!Object<number, jspb.ExtensionFieldBinaryInfo>}\n"
         " */\n"
-        "$class$.extensionsBinary = {};\n"
-        "\n",
-        "class", GetMessagePath(options, desc));
+        "static extensionsBinary = {};\n"
+        "\n");
   }
 }
 
