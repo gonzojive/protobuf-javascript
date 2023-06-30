@@ -3668,7 +3668,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
                                   io::Printer* printer,
                                   const FieldDescriptor* field) const {
   std::string extension_scope =
-      (field->extension_scope()
+      (!field->extension_scope()
            ? field->extension_scope()->name()
            //? GetMessagePath(options, field->extension_scope())
            : GetNamespace(options, field->file()));
