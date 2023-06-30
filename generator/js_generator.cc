@@ -2030,7 +2030,6 @@ void Generator::GenerateClass(const GeneratorOptions& options,
 
     if (options.import_style != GeneratorOptions::kImportClosure) {
       for (int i = 0; i < desc->extension_count(); i++) {
-        printer->Print("//about to generate extension\n");
         GenerateExtension(options, type_names, printer, desc->extension(i));
       }
     }
@@ -3668,12 +3667,12 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
                                   io::Printer* printer,
                                   const FieldDescriptor* field) const {
   std::string extension_scope_name =
-    (field->containing_type()
-      ? TypeNames::JsName(field->containing_type()->name())
-      : GetNamespace(options, field->file()));
+      (field->containing_type()
+          ? TypeNames::JsName(field->containing_type()->name())
+          : GetNamespace(options, field->file()));
 
-  const std::string extend_name = extension_scope_name + ".extensions";
-  const std::string extension_object_name = JSObjectFieldName(options, field);
+  std::string extend_name = extension_scope_name + ".extensions";
+  std::string extension_object_name = JSObjectFieldName(options, field);
 
   printer->Print(
       "\n"
@@ -4443,7 +4442,6 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
         FindProvidesForFields(options, &printer, fields, &provided);
         GenerateProvides(options, &printer, &provided);
         GenerateTestOnly(options, &printer);
-        //TODO:DM -  or imports for es6?
         GenerateRequiresForExtensions(options, &printer, fields, &provided);
 
         for (int j = 0; j < files[i]->extension_count(); j++) {
