@@ -3676,11 +3676,11 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   //std::string extension_scope = type_names.JsExpression(field->message_type());
   //std::string extension_scope = type_names.JsExpression(field->full_name());  
       //ImportAliases(type_names, *file->dependency(i))
-  std::string extension_scope = \
-    (field->extension_scope()
-      ? TypeNames::JsName(field->containing_type()->name()) //field->extension_scope()->name()
+  std::string extension_scope = TypeNames::JsName(field->containing_type()->name());
+    //(field->extension_scope()
+    //  ? TypeNames::JsName(field->containing_type()->name()) //field->extension_scope()->name()
       //      //? GetMessagePath(options, field->extension_scope())
-      : GetNamespace(options, field->file()));
+    //  : GetNamespace(options, field->file()));
 
   const std::string extension_object_name = JSObjectFieldName(options, field);
 
