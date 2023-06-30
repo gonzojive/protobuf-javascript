@@ -3676,12 +3676,12 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   //std::string extension_scope = type_names.JsExpression(field->message_type());
   //std::string extension_scope = type_names.JsExpression(field->full_name());  
       //ImportAliases(type_names, *file->dependency(i))
-  std::string extension_scope = TypeNames::JsName(field->containing_type()->name());
-    //(field->extension_scope()
-    //  ? TypeNames::JsName(field->containing_type()->name()) //field->extension_scope()->name()
-      //      //? GetMessagePath(options, field->extension_scope())
-    //  : GetNamespace(options, field->file()));
+  std::string extension_scope_name =
+    (field->containing_type()
+      ? TypeNames::JsName(field->containing_type()->name())
+      : GetNamespace(options, field->file()));
 
+  const std::string extend_name = extension_scope_name + ".extensions";
   const std::string extension_object_name = JSObjectFieldName(options, field);
 
   //const std::string classSymbol = options.WantEs6() ? field->extension_scope()->name() : GetMessagePath(options, field->extension_scope());
@@ -3732,15 +3732,14 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       // "if(!MethodOptions.extensionBinary) {\n"
       // "    MethodOptions.extensionBinary = [];\n"
       // "}\n"
-      //"MethodOptions.extensionBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
-      "$extendName$.extensionsBinary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
+      "$extendName$.Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
       "    $binaryWriterFn$,\n"
       "    $binaryMessageSerializeFn$,\n"
       "    $binaryMessageDeserializeFn$,\n",
       "extendName",
-      extension_scope,
+      extension_scope + ".extensions",
       //JSExtensionsObjectName(options, field->file(), field->containing_type()),
       "index", StrCat(field->number()), "class", extension_scope, "name",
       extension_object_name, "binaryReaderFn",
