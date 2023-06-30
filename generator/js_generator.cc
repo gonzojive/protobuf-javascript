@@ -3667,7 +3667,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
                                   const TypeNames& type_names,
                                   io::Printer* printer,
                                   const FieldDescriptor* field) const {
-  std::string extension_scope = GetNamespace(options, field->file());
+  std::string extension_scope = TypeNames::Es6TypeNames(options, field->file());//GetNamespace(options, field->file());
       // (field->extension_scope()
       //      ? field->extension_scope()->name()
       //      //? GetMessagePath(options, field->extension_scope())
@@ -4459,6 +4459,7 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
         FindProvidesForFields(options, &printer, fields, &provided);
         GenerateProvides(options, &printer, &provided);
         GenerateTestOnly(options, &printer);
+        //TODO:DM -  or imports for es6?
         GenerateRequiresForExtensions(options, &printer, fields, &provided);
 
         for (int j = 0; j < files[i]->extension_count(); j++) {
