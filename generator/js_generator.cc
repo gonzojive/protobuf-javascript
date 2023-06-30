@@ -2071,7 +2071,7 @@ void Generator::GenerateClassEs6(const GeneratorOptions& options,
 
   printer->Indent();
 
-  GenerateClassConstructor(options, printer, desc);
+  GenerateClassConstructorAndDeclareExtensionFieldInfo(options, printer, desc);
 
   GenerateClassFieldInfo(options, printer, desc);
 
@@ -4361,11 +4361,11 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
                 options, &printer, one_desc);
           }
         }
-        for (auto one_desc : scc->descriptors) {
-          if (one_desc->containing_type() == nullptr) {
-            GenerateClass(options, type_names, &printer, one_desc);
-          }
-        }
+        // for (auto one_desc : scc->descriptors) {
+        //   if (one_desc->containing_type() == nullptr) {
+        //     GenerateClass(options, type_names, &printer, one_desc);
+        //   }
+        // }
 
         for (auto one_desc : scc->descriptors) {
           have_printed.insert(one_desc);
