@@ -3667,15 +3667,6 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
                                   const TypeNames& type_names,
                                   io::Printer* printer,
                                   const FieldDescriptor* field) const {
-  //std::string extension_scope = ImportAliases(TypeNames::Es6TypeNames(options, field->file()), field->file());//GetNamespace(options, field->file());
-  //std::string extension_scope = TypeNames::JsName(field->containing_type()->name());
-  // if (field->is_extension()) {
-  //   extension_scope = "foobarbaz\n";
-  // }
-  //std::string extension_scope = type_names.JsExpression(field->extension_scope()->full_name());
-  //std::string extension_scope = type_names.JsExpression(field->message_type());
-  //std::string extension_scope = type_names.JsExpression(field->full_name());  
-      //ImportAliases(type_names, *file->dependency(i))
   std::string extension_scope_name =
     (field->containing_type()
       ? TypeNames::JsName(field->containing_type()->name())
@@ -3684,26 +3675,16 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   const std::string extend_name = extension_scope_name + ".extensions";
   const std::string extension_object_name = JSObjectFieldName(options, field);
 
-  //const std::string classSymbol = options.WantEs6() ? field->extension_scope()->name() : GetMessagePath(options, field->extension_scope());
-  //This may not even be what I want for extension
-  // const Descriptor* desc = field->file()->message_type(0);
-  // const std::string alias = TypeNames::Es6TypeName();
-  // printer->Print("\n\n", alias, "\n\n");
-  // how to generate NEW class, not in options?
-  // GenerateClassEs6(options, type_names, printer, desc);
-
   printer->Print(
       "\n"
       "/**\n"
       " * A tuple of {field number, class constructor} for the extension\n"
-      " * field named `$nameInComment$`.\n"
+      " * field named `$name$`.\n"
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
       ""
       "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
-      //"var foo = new jspb.ExtensionFieldInfo(\n",
-      "nameInComment", extension_object_name, "name", extension_object_name,
-      "class", extension_scope, "extensionType", 
+      "class", extension_scope_name, "name", extension_object_name, "extensionType", 
       JSFieldTypeAnnotation(options, field,
                             /* is_setter_argument = */ false,
                             /* force_present = */ true,
@@ -3729,22 +3710,20 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   printer->Print(
       "\n"
-      // "if(!MethodOptions.extensionBinary) {\n"
-      // "    MethodOptions.extensionBinary = [];\n"
-      // "}\n"
+      "if(!$extendName$Binary) {\n"
+      "    $extendName$Binary = [];\n"
+      "}\n"
       "$extendName$.Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
       "    $binaryWriterFn$,\n"
       "    $binaryMessageSerializeFn$,\n"
       "    $binaryMessageDeserializeFn$,\n",
-      "extendName",
-      extension_scope + ".extensions",
-      //JSExtensionsObjectName(options, field->file(), field->containing_type()),
-      "index", StrCat(field->number()), "class", extension_scope, "name",
-      extension_object_name, "binaryReaderFn",
-      JSBinaryReaderMethodName(options, field), "binaryWriterFn",
-      JSBinaryWriterMethodName(options, field), "binaryMessageSerializeFn",
+      "extendName", extend_name, "index", StrCat(field->number()),
+      "class", extension_scope_name, "name", extension_object_name,
+      "binaryReaderFn", JSBinaryReaderMethodName(options, field),
+      "binaryWriterFn", JSBinaryWriterMethodName(options, field),
+      "binaryMessageSerializeFn",
       (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE)
           ? (type_names.SubmessageTypeRef(field) + ".serializeBinaryToWriter")
           : "undefined",
@@ -3759,17 +3738,13 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   printer->Print(
       "// This registers the extension field with the extended class, so that\n"
       "// toObject() will function correctly.\n"
-      // "if(!MethodOptions.extensions) {\n"
-      // "    MethodOptions.extensions = [];\n"
-      // "}\n"
-      "$extendName$.extensions[$index$] = $class$.$name$;\n"
-      //"MethodOptions.extensions[$index$] = $class$.$name$;\n"
+      "if(!$extendName$) {\n"
+      "    $extendName$ = [];\n"
+      "}\n"
+      "$extendName$[$index$] = $class$.$name$;\n"
       "\n",
-      "extendName",
-      extension_scope,
-      //JSExtensionsObjectName(options, field->file(), field->containing_type()),
-      "index", StrCat(field->number()), "class", extension_scope, "name",
-      extension_object_name);
+      "extendName", extend_name, "index", StrCat(field->number()),
+      "class", extension_scope_name, "name", extension_object_name);
 }
 
 bool GeneratorOptions::ParseFromOptions(
