@@ -3740,8 +3740,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "    $binaryMessageSerializeFn$,\n"
       "    $binaryMessageDeserializeFn$,\n",
       "extendName",
-      //extension_scope,
-      JSExtensionsObjectName(options, field->file(), field->containing_type()),
+      extension_scope,
+      //JSExtensionsObjectName(options, field->file(), field->containing_type()),
       "index", StrCat(field->number()), "class", extension_scope, "name",
       extension_object_name, "binaryReaderFn",
       JSBinaryReaderMethodName(options, field), "binaryWriterFn",
@@ -3767,7 +3767,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       //"MethodOptions.extensions[$index$] = $class$.$name$;\n"
       "\n",
       "extendName",
-      JSExtensionsObjectName(options, field->file(), field->containing_type()),
+      extension_scope,
+      //JSExtensionsObjectName(options, field->file(), field->containing_type()),
       "index", StrCat(field->number()), "class", extension_scope, "name",
       extension_object_name);
 }
