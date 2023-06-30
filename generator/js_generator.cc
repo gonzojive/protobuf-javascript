@@ -3669,7 +3669,8 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
                                   const FieldDescriptor* field) const {
   std::string extension_scope =
       (field->extension_scope()
-           ? field->extension_scope()->name() //GetMessagePath(options, field->extension_scope())
+           //? field->extension_scope()->name()
+           ? GetMessagePath(options, field->extension_scope())
            : GetNamespace(options, field->file()));
 
   const std::string extension_object_name = JSObjectFieldName(options, field);
