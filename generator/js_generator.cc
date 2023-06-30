@@ -3675,7 +3675,6 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * field named `$name$`.\n"
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
-      ""
       "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
       "class", extension_scope_name, "name", extension_object_field_name, "extensionType", 
       JSFieldTypeAnnotation(options, field,
