@@ -1240,7 +1240,9 @@ std::string RelativeTypeName(const FieldDescriptor* field) {
 std::string JSExtensionsObjectName(const GeneratorOptions& options,
                                    const FileDescriptor* from_file,
                                    const Descriptor* desc) {
-  if (desc->full_name() == "google.protobuf.bridge.MessageSet") {
+  if (options.WantEs6()) {
+    return TypeNames::JsName(desc->name()) + ".extensions";
+  } else if (desc->full_name() == "google.protobuf.bridge.MessageSet") {
     // TODO(haberman): fix this for the kImportCommonJs case.
     return "jspb.Message.messageSetExtensions";
   } else {
@@ -3662,9 +3664,9 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       (field->containing_type()
           ? TypeNames::JsName(field->containing_type()->name())
           : GetNamespace(options, field->file()));
-
-  std::string extend_name = extension_scope_name + ".extensions";
-  std::string extension_object_name = JSObjectFieldName(options, field);
+  std::string extension_object_name =
+      JSExtensionsObjectName(options, field->file(), field->containing_type());
+  std::string extension_object_field_name = JSObjectFieldName(options, field);
 
   printer->Print(
       "\n"
@@ -3675,7 +3677,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " */\n"
       ""
       "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
-      "class", extension_scope_name, "name", extension_object_name, "extensionType", 
+      "class", extension_scope_name, "name", extension_object_field_name, "extensionType", 
       JSFieldTypeAnnotation(options, field,
                             /* is_setter_argument = */ false,
                             /* force_present = */ true,
@@ -3689,7 +3691,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "!Object} */ (\n"
       "         $toObject$),\n"
       "    $repeated$);\n",
-      "index", StrCat(field->number()), "name", extension_object_name, "ctor",
+      "index", StrCat(field->number()), "name", extension_object_field_name, "ctor",
       (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE
            ? type_names.SubmessageTypeRef(field)
            : std::string("null")),
@@ -3701,17 +3703,14 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
 
   printer->Print(
       "\n"
-      // "if(!$extendName$Binary) {\n"
-      // "    $extendName$Binary = [];\n"
-      // "}\n"
       "$extendName$Binary[$index$] = new jspb.ExtensionFieldBinaryInfo(\n"
       "    $class$.$name$,\n"
       "    $binaryReaderFn$,\n"
       "    $binaryWriterFn$,\n"
       "    $binaryMessageSerializeFn$,\n"
       "    $binaryMessageDeserializeFn$,\n",
-      "extendName", extend_name, "index", StrCat(field->number()),
-      "class", extension_scope_name, "name", extension_object_name,
+      "extendName", extension_object_name, "index", StrCat(field->number()),
+      "class", extension_scope_name, "name", extension_object_field_name,
       "binaryReaderFn", JSBinaryReaderMethodName(options, field),
       "binaryWriterFn", JSBinaryWriterMethodName(options, field),
       "binaryMessageSerializeFn",
@@ -3729,13 +3728,10 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
   printer->Print(
       "// This registers the extension field with the extended class, so that\n"
       "// toObject() will function correctly.\n"
-      // "if(!$extendName$) {\n"
-      // "    $extendName$ = [];\n"
-      // "}\n"
       "$extendName$[$index$] = $class$.$name$;\n"
       "\n",
-      "extendName", extend_name, "index", StrCat(field->number()),
-      "class", extension_scope_name, "name", extension_object_name);
+      "extendName", extension_object_name, "index", StrCat(field->number()),
+      "class", extension_scope_name, "name", extension_object_field_name);
 }
 
 bool GeneratorOptions::ParseFromOptions(
