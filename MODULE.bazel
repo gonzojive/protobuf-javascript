@@ -1,6 +1,6 @@
 module(
     name = "protobuf_javascript_gonzojive",
-    version = "3.21.5",
+    version = "3.21.5.gonzojive",
 )
 
 bazel_dep(name = "protobuf", version = "26.0.bcr.2", repo_name = "com_google_protobuf")
