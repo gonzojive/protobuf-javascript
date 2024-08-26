@@ -3147,6 +3147,7 @@ void Generator::GenerateRepeatedPrimitiveHelperMethods(
       "$methodstart$(value, opt_index) {\n"
       "  return jspb.Message.addToRepeatedField(this, "
       "$index$",
+      "field_name", field->name(),
       "methodstart", adderMethodStart,
       "class", classSymbol,
       "addername", adderName,
