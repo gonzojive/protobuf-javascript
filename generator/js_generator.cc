@@ -1790,7 +1790,10 @@ void Generator::GenerateRequiresForLibrary(
     const GeneratorOptions& options, io::Printer* printer,
     const std::vector<const FileDescriptor*>& files,
     std::set<std::string>* provided) const {
-  ABSL_CHECK_EQ(options.import_style, GeneratorOptions::kImportClosure);
+  ABSL_CHECK(
+    options.import_style == GeneratorOptions::kImportClosure ||
+    options.import_style == GeneratorOptions::kImportEs6);
+  //ABSL_CHECK_EQ(options.import_style, GeneratorOptions::kImportClosure);
   // For Closure imports we need to import every message type individually.
   std::set<std::string> required;
   std::set<std::string> forwards;
@@ -3156,7 +3159,8 @@ void Generator::GenerateRepeatedPrimitiveHelperMethods(
                                 /* singular_if_not_packed = */ false,
                                 BYTES_DEFAULT,
                                 /* force_singular = */ true),
-      "index", JSFieldIndex(field));
+      "index", JSFieldIndex(field),
+      "field_name", field->name());
   printer->Annotate("addername", field);
   printer->Print(
       "$oneofgroup$, $type$value$rptvalueinit$$typeclose$, "
