@@ -1078,10 +1078,14 @@ std::string JSBinaryMethodType(const FieldDescriptor* field, bool is_writer) {
   if (name[0] >= 'a' && name[0] <= 'z') {
     name[0] = (name[0] - 'a') + 'A';
   }
+  /* TODO - reddaly: Uncomment when
+  https://github.com/protocolbuffers/protobuf-javascript/pull/191
+  is merged
   if (!is_writer && field->type() == FieldDescriptor::TYPE_STRING &&
       field->requires_utf8_validation()) {
     name = name + "RequireUtf8";
   }
+  */
   return IsIntegralFieldWithStringJSType(field) ? (name + "String") : name;
 }
 
@@ -1156,12 +1160,13 @@ bool HasRepeatedFields(const GeneratorOptions& options,
   return false;
 }
 
+static const char* kRepeatedFieldArrayNameNoDot = "repeatedFields_";
 static const char* kRepeatedFieldArrayName = ".repeatedFields_";
 
 std::string RepeatedFieldsArrayName(const GeneratorOptions& options,
                                     const Descriptor* desc) {
   return HasRepeatedFields(options, desc)
-             ? (GetMessagePath(options, desc) + kRepeatedFieldArrayName)
+             ? (desc->name() + kRepeatedFieldArrayName)
              : "null";
 }
 
@@ -1174,12 +1179,12 @@ bool HasOneofFields(const Descriptor* desc) {
   return false;
 }
 
-static const char* kOneofGroupArrayName = ".oneofGroups_";
+static const char* kOneofGroupArrayNameNoDot = "oneofGroups_";
 
 std::string OneofFieldsArrayName(const GeneratorOptions& options,
                                  const Descriptor* desc) {
   return HasOneofFields(desc)
-             ? (GetMessagePath(options, desc) + kOneofGroupArrayName)
+             ? (desc->name() + "." + kOneofGroupArrayNameNoDot)
              : "null";
 }
 
@@ -2156,8 +2161,9 @@ printer->Print(
     !message_id.empty() ? ("'" + message_id + "'")
                         : (IsResponse(desc) ? "''" : "0"),
     "pivot", GetPivot(desc), "rptfields",
-    RepeatedFieldsArrayName(options, desc), "oneoffields",
-    OneofFieldsArrayName(options, desc));
+    RepeatedFieldsArrayName(options, desc),
+    "oneoffields", OneofFieldsArrayName(options, desc)
+    );
 printer->Print(
     "$methodend$\n\n",
     "methodend", methodEnd);
@@ -2207,7 +2213,7 @@ void Generator::GenerateClassFieldInfo(const GeneratorOptions& options,
         "$lhs$ = $rptfields$;\n"
         "\n",
         "lhs", StaticMemberAssignmentLhs(
-          options, className.c_str(), kRepeatedFieldArrayName),
+          options, className.c_str(), kRepeatedFieldArrayNameNoDot),
         "rptfields", RepeatedFieldNumberList(options, desc));
   }
 
@@ -2215,9 +2221,9 @@ void Generator::GenerateClassFieldInfo(const GeneratorOptions& options,
     const std::string assignment = (
       options.import_style == GeneratorOptions::kImportEs6
     ) ? (
-      std::string("static ") + kOneofGroupArrayName + " = " + OneofGroupList(desc) + ";"
+      std::string("static ") + kOneofGroupArrayNameNoDot + " = " + OneofGroupList(desc) + ";"
     ) : (
-      className + "." + kOneofGroupArrayName + " = " + OneofGroupList(desc) + ";"
+      className + "." + kOneofGroupArrayNameNoDot + " = " + OneofGroupList(desc) + ";"
     );
     printer->Print(
         "/**\n"
@@ -4506,7 +4512,7 @@ const std::string Generator::StaticMemberAssignmentLhs(
       if (options.WantEs6()) {
         return std::string("static ") + fieldName;
       } else {
-        return std::string("") + classSymbol + "." + fieldName;
+        return std::string("/* non-ES6 path */ ") + classSymbol + "." + fieldName;
       }
     }
 
