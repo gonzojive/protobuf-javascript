@@ -179,3 +179,13 @@ idea of how the library generally works:
 
 For more examples, see the tests.  You can also look at the generated code
 to see what methods are defined for your generated messages.
+
+
+Releasing
+===
+
+The following script can be used to push a release to github:
+
+```shell
+go run tools/upload-release.go
+```
