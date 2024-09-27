@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -10,15 +11,18 @@ import (
 )
 
 var (
-	tagFlag = flag.String("tag", "", "The Git tag to create the release for")
+	tagFlag    = flag.String("tag", "", "The Git tag to create the release for")
+	dryRunFlag = flag.Bool("dry-run", false, "Skip creating the GitHub release")
+	draftFlag  = flag.Bool("draft", true, "Whether to create the release in a draft state.")
 )
 
 func runCommand(cmd *exec.Cmd) error {
 	fmt.Printf("Running command: %s\n", strings.Join(cmd.Args, " "))
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	stdErr := bytes.Buffer{}
+	cmd.Stderr = &stdErr
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("command failed: %v", err)
+		return fmt.Errorf("command failed: %w; command output: %s", err, string(stdErr.Bytes()))
 	}
 	return nil
 }
@@ -31,7 +35,6 @@ func main() {
 }
 
 func mainErr() error {
-	dryRunGithubPtr := flag.Bool("dry-run", false, "Skip creating the GitHub release")
 	flag.Parse()
 
 	var tag string
@@ -64,19 +67,28 @@ func mainErr() error {
 	}
 
 	// Archive the code
-	if err := runCommand(exec.Command("git", "archive", "--format", "zip", "--output", tempDir+"/protobuf-javascript-"+tag+".zip", "--prefix", "protobuf-javascript-"+tag+"/", tag)); err != nil {
+	sourceZipPath := tempDir + "/protobuf-javascript-" + tag + ".zip"
+	if err := runCommand(exec.Command("git", "archive", "--format", "zip",
+		"--output", sourceZipPath,
+		"--prefix", "protobuf-javascript-"+tag+"/",
+		tag)); err != nil {
 		return fmt.Errorf("Failed to archive code: %v", err)
 	}
 
-	createRelease := func(tag string, tempDir string, dryRun bool) error {
+	createRelease := func(dryRun bool) error {
 		releaseArgs := []string{
-			"gh", "release", "create",
+			"gh",
+			"--repo", "gonzojive/protobuf-javascript",
+			"release", "create",
 			tag,
-			tempDir + "/protobuf-javascript-" + tag + ".zip",
+			sourceZipPath,
 			"--verify-tag",
 			"--title", tag,
 			"--notes", "experimental version with bzlmod support.",
-			"--draft", "--prerelease",
+			"--prerelease",
+		}
+		if *draftFlag {
+			releaseArgs = append(releaseArgs, "--draft")
 		}
 		if !dryRun {
 			return runCommand(exec.Command(releaseArgs[0], releaseArgs[1:]...))
@@ -88,7 +100,7 @@ func mainErr() error {
 	}
 
 	// Create the GitHub release
-	if err := createRelease(tag, tempDir, *dryRunGithubPtr); err != nil {
+	if err := createRelease(*dryRunFlag); err != nil {
 		return fmt.Errorf("Failed to create GitHub release: %v", err)
 	}
 
