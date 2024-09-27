@@ -6,7 +6,7 @@ bazel-*
 /deps.js
 /testproto_libs1.js
 /testproto_libs2.js
-/google-protobuf.js
+#/google-protobuf.js
 /google-protobuf.js.map
 
 ### Automatically added by Hedron's Bazel Compile Commands Extractor: https://github.com/hedronvision/bazel-compile-commands-extractor
@@ -18,3 +18,4 @@ bazel-*
 /compile_commands.json
 # Ignore the directory in which `clangd` stores its local index.
 /.cache/
+/tmp-for-protobuf-install/

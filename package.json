@@ -1,11 +1,9 @@
 {
-  "name": "google-protobuf",
-  "version": "3.21.2",
+  "name": "gonzojive-google-protobuf",
+  "version": "3.21.5",
   "description": "Protocol Buffers for JavaScript",
   "main": "google-protobuf.js",
   "files": [
-    "google/protobuf/*_pb.js",
-    "google/protobuf/compiler/*_pb.js",
     "google-protobuf.js",
     "LICENSE.md",
     "LICENSE-asserts.md",
@@ -23,6 +21,7 @@
   },
   "scripts": {
     "build": "node ./node_modules/gulp/bin/gulp.js dist",
+    "build-debug": "node ./node_modules/gulp/bin/gulp.js dist_debug",
     "test": "node ./node_modules/gulp/bin/gulp.js test",
     "clean": "node ./node_modules/gulp/bin/gulp.js clean"
   },

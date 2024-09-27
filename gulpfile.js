@@ -68,7 +68,12 @@ function make_exec_logging_callback(cb) {
 }
 
 function enableAdvancedOptimizations(cb) {
-  compilationLevel = 'ADVANCED';
+  compilationLevel =  'ADVANCED';
+  cb();
+}
+
+function enableNoOptimizations(cb) {
+  compilationLevel =  'BUNDLE';
   cb();
 }
 
@@ -151,7 +156,8 @@ function getClosureCompilerCommand(exportsFile, outputFile) {
     '--generate_exports',
     `--compilation_level=${compilationLevel}`,
     '--export_local_property_definitions',
-    `--entry_point=${exportsFile}`, `> ${outputFile}`
+    `--entry_point=${exportsFile}`,
+    `--js_output_file=${outputFile}`
   ].join(' ');
 }
 
@@ -224,6 +230,7 @@ const dist = series(exports.build_protoc_plugin,
                     gen_google_protobuf_js);
 
 exports.dist = series(enableAdvancedOptimizations, dist);
+exports.dist_debug = series(enableNoOptimizations, dist);
 
 exports.build_commonjs = series(
     dist,
