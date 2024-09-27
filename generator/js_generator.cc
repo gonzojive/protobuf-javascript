@@ -2024,7 +2024,16 @@ void Generator::GenerateClass(const GeneratorOptions& options,
     for (FileToc* toc = well_known_types_js; toc->name != NULL; toc++) {
       std::string name = std::string("google/protobuf/") + toc->name;
       if (name == StripProto(desc->file()->name()) + ".js") {
-        printer->Print(toc->data);
+        std::string prototypeDotOrEmpty;
+        if (options.import_style == GeneratorOptions::kImportEs6) {
+          prototypeDotOrEmpty = "";
+        } else {
+          prototypeDotOrEmpty = 
+            GetMessagePath(options, desc) + ".";
+        }
+        printer->Print(
+          toc->data, 
+          "prototypedotorempty", prototypeDotOrEmpty);
       }
     }
   }
