@@ -1,6 +1,6 @@
 // Protocol Buffers - Google's data interchange format
 // Copyright 2008 Google Inc.  All rights reserved.
-// https://developers.google.com/protocol-buffers/
+// https://protobuf.dev/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -34,11 +34,14 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/io/printer.h>
+#include <google/protobuf/io/strtod.h>
 #include <google/protobuf/io/zero_copy_stream.h>
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/logging.h>
-#include <google/protobuf/stubs/stringprintf.h>
-#include <google/protobuf/stubs/strutil.h>
+#include "absl/strings/escaping.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
+#include "absl/strings/str_join.h"
+#include "absl/strings/str_replace.h"
+#include "absl/strings/strip.h"
 
 #include <algorithm>
 #include <limits>
@@ -87,8 +90,7 @@ bool IsReserved(const std::string& ident) {
 
 std::string GetSnakeFilename(const std::string& filename) {
   std::string snake_name = filename;
-  ReplaceCharacters(&snake_name, "/", '_');
-  return snake_name;
+  return absl::StrReplaceAll(snake_name, {{"/", "_"}});
 }
 
 // Given a filename like foo/bar/baz.proto, returns the corresponding JavaScript
@@ -132,9 +134,9 @@ std::string ModuleAlias(const std::string& filename) {
   // We'll worry about this problem if/when we actually see it.  This name isn't
   // exposed to users so we can change it later if we need to.
   std::string basename = StripProto(filename);
-  ReplaceCharacters(&basename, "-", '$');
-  ReplaceCharacters(&basename, "/", '_');
-  ReplaceCharacters(&basename, ".", '_');
+  basename = absl::StrReplaceAll(basename, {{"-", "$"}});
+  basename = absl::StrReplaceAll(basename, {{"/", "_"}});
+  basename = absl::StrReplaceAll(basename, {{".", "_"}});
   return basename + "_pb";
 }
 
@@ -169,7 +171,7 @@ std::string GetNestedMessageName(const Descriptor* descriptor) {
     return "";
   }
   std::string result =
-      StripPrefixString(descriptor->full_name(), descriptor->file()->package());
+      std::string(absl::StripPrefix(descriptor->full_name(), descriptor->file()->package()));
   // Add a leading dot if one is not already present.
   if (!result.empty() && result[0] != '.') {
     result = "." + result;
@@ -238,7 +240,7 @@ std::string MaybeCrossFileRef(const GeneratorOptions& options,
 
 // std::string SubmessageTypeRef(const GeneratorOptions& options,
 //                               const FieldDescriptor* field) {
-//   GOOGLE_CHECK(field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE);
+//   ABSL_CHECK(field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE);
 //   return MaybeCrossFileRef(options, field->file(), field->message_type());
 // }
 
@@ -262,14 +264,14 @@ char ToLowerASCII(char c) {
 std::vector<std::string> ParseLowerUnderscore(const std::string& input) {
   std::vector<std::string> words;
   std::string running = "";
-  for (int i = 0; i < input.size(); i++) {
-    if (input[i] == '_') {
+  for (auto c : input) {
+    if (c == '_') {
       if (!running.empty()) {
         words.push_back(running);
         running.clear();
       }
     } else {
-      running += ToLowerASCII(input[i]);
+      running += ToLowerASCII(c);
     }
   }
   if (!running.empty()) {
@@ -281,12 +283,12 @@ std::vector<std::string> ParseLowerUnderscore(const std::string& input) {
 std::vector<std::string> ParseUpperCamel(const std::string& input) {
   std::vector<std::string> words;
   std::string running = "";
-  for (int i = 0; i < input.size(); i++) {
-    if (input[i] >= 'A' && input[i] <= 'Z' && !running.empty()) {
+  for (auto c : input) {
+    if (c >= 'A' && c <= 'Z' && !running.empty()) {
       words.push_back(running);
       running.clear();
     }
-    running += ToLowerASCII(input[i]);
+    running += ToLowerASCII(c);
   }
   if (!running.empty()) {
     words.push_back(running);
@@ -296,22 +298,22 @@ std::vector<std::string> ParseUpperCamel(const std::string& input) {
 
 std::string ToLowerCamel(const std::vector<std::string>& words) {
   std::string result;
-  for (int i = 0; i < words.size(); i++) {
-    std::string word = words[i];
-    if (i == 0 && (word[0] >= 'A' && word[0] <= 'Z')) {
+  auto first = true;
+  for (auto word : words) {
+    if (first && (word[0] >= 'A' && word[0] <= 'Z')) {
       word[0] = (word[0] - 'A') + 'a';
-    } else if (i != 0 && (word[0] >= 'a' && word[0] <= 'z')) {
+    } else if (!first && (word[0] >= 'a' && word[0] <= 'z')) {
       word[0] = (word[0] - 'a') + 'A';
     }
     result += word;
+    first = false;
   }
   return result;
 }
 
 std::string ToUpperCamel(const std::vector<std::string>& words) {
   std::string result;
-  for (int i = 0; i < words.size(); i++) {
-    std::string word = words[i];
+  for (auto word : words) {
     if (word[0] >= 'a' && word[0] <= 'z') {
       word[0] = (word[0] - 'a') + 'A';
     }
@@ -327,11 +329,11 @@ std::string ToEnumCase(const std::string& input) {
   std::string result;
   result.reserve(input.size());
 
-  for (int i = 0; i < input.size(); i++) {
-    if ('a' <= input[i] && input[i] <= 'z') {
-      result.push_back(input[i] - 'a' + 'A');
+  for (auto c : input) {
+    if ('a' <= c && c <= 'z') {
+      result.push_back(c - 'a' + 'A');
     } else {
-      result.push_back(input[i]);
+      result.push_back(c);
     }
   }
 
@@ -342,11 +344,11 @@ std::string ToLower(const std::string& input) {
   std::string result;
   result.reserve(input.size());
 
-  for (int i = 0; i < input.size(); i++) {
-    if ('A' <= input[i] && input[i] <= 'Z') {
-      result.push_back(input[i] - 'A' + 'a');
+  for (auto c : input) {
+    if ('A' <= c && c <= 'Z') {
+      result.push_back(c - 'A' + 'a');
     } else {
-      result.push_back(input[i]);
+      result.push_back(c);
     }
   }
 
@@ -405,7 +407,7 @@ std::string GetMessagesFileName(const GeneratorOptions& options, const SCC* scc,
       std::string snake_name = StripProto(
           GetSnakeFilename(scc->GetRepresentative()->file()->name()));
       (*long_name_dict)[scc->GetRepresentative()] =
-          StrCat(snake_name, "_long_sccs_",
+          absl::StrCat(snake_name, "_long_sccs_",
                  static_cast<uint64_t>((*long_name_dict).size()));
     }
     filename_base = (*long_name_dict)[scc->GetRepresentative()];
@@ -447,9 +449,14 @@ bool IgnoreField(const FieldDescriptor* field) {
 // Do we ignore this message type?
 bool IgnoreMessage(const Descriptor* d) { return d->options().map_entry(); }
 
+bool IsSyntheticOneof(const OneofDescriptor* oneof) {
+  return oneof->field_count() == 1 &&
+      oneof->field(0)->real_containing_oneof() == nullptr;
+}
+
 // Does JSPB ignore this entire oneof? True only if all fields are ignored.
 bool IgnoreOneof(const OneofDescriptor* oneof) {
-  if (oneof->is_synthetic()) return true;
+  if (IsSyntheticOneof(oneof)) { return true; }
   for (int i = 0; i < oneof->field_count(); i++) {
     if (!IgnoreField(oneof->field(i))) {
       return false;
@@ -547,18 +554,18 @@ std::string JSFieldIndex(const FieldDescriptor* field) {
     for (int i = 0; i < parent_type->field_count(); i++) {
       if (parent_type->field(i)->type() == FieldDescriptor::TYPE_GROUP &&
           parent_type->field(i)->message_type() == containing_type) {
-        return StrCat(field->number() - parent_type->field(i)->number());
+        return absl::StrCat(field->number() - parent_type->field(i)->number());
       }
     }
   }
-  return StrCat(field->number());
+  return absl::StrCat(field->number());
 }
 
 std::string JSOneofIndex(const OneofDescriptor* oneof) {
   int index = -1;
   for (int i = 0; i < oneof->containing_type()->oneof_decl_count(); i++) {
     const OneofDescriptor* o = oneof->containing_type()->oneof_decl(i);
-    if (o->is_synthetic()) continue;
+    if (IsSyntheticOneof(o)) { continue; }
     // If at least one field in this oneof is not JSPB-ignored, count the oneof.
     for (int j = 0; j < o->field_count(); j++) {
       const FieldDescriptor* f = o->field(j);
@@ -571,7 +578,7 @@ std::string JSOneofIndex(const OneofDescriptor* oneof) {
       break;
     }
   }
-  return StrCat(index);
+  return absl::StrCat(index);
 }
 
 // Decodes a codepoint in \x0000 -- \xFFFF.
@@ -679,9 +686,9 @@ bool EscapeJSString(const std::string& in, std::string* out) {
         if (codepoint >= 0x20 && codepoint <= 0x7e) {
           *out += static_cast<char>(codepoint);
         } else if (codepoint >= 0x100) {
-          *out += StringPrintf("\\u%04x", codepoint);
+          *out += absl::StrFormat("\\u%04x", codepoint);
         } else {
-          *out += StringPrintf("\\x%02x", codepoint);
+          *out += absl::StrFormat("\\x%02x", codepoint);
         }
         break;
     }
@@ -768,18 +775,17 @@ std::string PostProcessFloat(std::string result) {
 }
 
 std::string FloatToString(float value) {
-  std::string result = SimpleFtoa(value);
+  std::string result = io::SimpleFtoa(value);
   return PostProcessFloat(result);
 }
 
 std::string DoubleToString(double value) {
-  std::string result = SimpleDtoa(value);
+  std::string result = io::SimpleDtoa(value);
   return PostProcessFloat(result);
 }
 
 bool InRealOneof(const FieldDescriptor* field) {
-  return field->containing_oneof() &&
-         !field->containing_oneof()->is_synthetic();
+  return field->real_containing_oneof() != nullptr;
 }
 
 // Return true if this is an integral field that should be represented as string
@@ -808,21 +814,21 @@ std::string JSFieldDefault(const FieldDescriptor* field) {
 
   switch (field->cpp_type()) {
     case FieldDescriptor::CPPTYPE_INT32:
-      return MaybeNumberString(field, StrCat(field->default_value_int32()));
+      return MaybeNumberString(field, absl::StrCat(field->default_value_int32()));
     case FieldDescriptor::CPPTYPE_UINT32:
       // The original codegen is in Java, and Java protobufs store unsigned
       // integer values as signed integer values. In order to exactly match the
       // output, we need to reinterpret as base-2 signed. Ugh.
       return MaybeNumberString(
-          field, StrCat(static_cast<int32_t>(field->default_value_uint32())));
+          field, absl::StrCat(static_cast<int32_t>(field->default_value_uint32())));
     case FieldDescriptor::CPPTYPE_INT64:
-      return MaybeNumberString(field, StrCat(field->default_value_int64()));
+      return MaybeNumberString(field, absl::StrCat(field->default_value_int64()));
     case FieldDescriptor::CPPTYPE_UINT64:
       // See above note for uint32 -- reinterpreting as signed.
       return MaybeNumberString(
-          field, StrCat(static_cast<int64_t>(field->default_value_uint64())));
+          field, absl::StrCat(static_cast<int64_t>(field->default_value_uint64())));
     case FieldDescriptor::CPPTYPE_ENUM:
-      return StrCat(field->default_value_enum()->number());
+      return absl::StrCat(field->default_value_enum()->number());
     case FieldDescriptor::CPPTYPE_BOOL:
       return field->default_value_bool() ? "true" : "false";
     case FieldDescriptor::CPPTYPE_FLOAT:
@@ -835,7 +841,7 @@ std::string JSFieldDefault(const FieldDescriptor* field) {
         bool is_valid = EscapeJSString(field->default_value_string(), &out);
         if (!is_valid) {
           // TODO(b/115551870): Decide whether this should be a hard error.
-          GOOGLE_LOG(WARNING)
+          ABSL_LOG(WARNING)
               << "The default value for field " << field->full_name()
               << " was truncated since it contained invalid UTF-8 or"
                  " codepoints outside the basic multilingual plane.";
@@ -847,7 +853,7 @@ std::string JSFieldDefault(const FieldDescriptor* field) {
     case FieldDescriptor::CPPTYPE_MESSAGE:
       return "null";
   }
-  GOOGLE_LOG(FATAL) << "Shouldn't reach here.";
+  ABSL_LOG(FATAL) << "Shouldn't reach here.";
   return "";
 }
 
@@ -979,7 +985,7 @@ bool DeclaredReturnTypeIsNullable(const GeneratorOptions& options,
     return false;
   }
 
-  if (field->file()->syntax() == FileDescriptor::SYNTAX_PROTO3 &&
+  if (!field->has_presence() && !field->is_repeated() &&
       field->cpp_type() != FieldDescriptor::CPPTYPE_MESSAGE) {
     return false;
   }
@@ -1066,17 +1072,21 @@ std::string JSFieldTypeAnnotation(const GeneratorOptions& options,
   return jstype;
 }
 
-std::string JSBinaryReaderMethodType(const FieldDescriptor* field) {
+std::string JSBinaryMethodType(const FieldDescriptor* field, bool is_writer) {
   std::string name = field->type_name();
   if (name[0] >= 'a' && name[0] <= 'z') {
     name[0] = (name[0] - 'a') + 'A';
+  }
+  if (!is_writer && field->type() == FieldDescriptor::TYPE_STRING &&
+      field->requires_utf8_validation()) {
+    name = name + "RequireUtf8";
   }
   return IsIntegralFieldWithStringJSType(field) ? (name + "String") : name;
 }
 
 std::string JSBinaryReadWriteMethodName(const FieldDescriptor* field,
                                         bool is_writer) {
-  std::string name = JSBinaryReaderMethodType(field);
+  std::string name = JSBinaryMethodType(field, is_writer);
   if (field->is_packed()) {
     name = "Packed" + name;
   } else if (is_writer && field->is_repeated()) {
@@ -1180,7 +1190,7 @@ std::string RepeatedFieldNumberList(const GeneratorOptions& options,
       numbers.push_back(JSFieldIndex(desc->field(i)));
     }
   }
-  return "[" + Join(numbers, ",") + "]";
+  return "[" + absl::StrJoin(numbers, ",") + "]";
 }
 
 std::string OneofGroupList(const Descriptor* desc) {
@@ -1199,9 +1209,9 @@ std::string OneofGroupList(const Descriptor* desc) {
       }
       oneof_fields.push_back(JSFieldIndex(oneof->field(j)));
     }
-    oneof_entries.push_back("[" + Join(oneof_fields, ",") + "]");
+    oneof_entries.push_back("[" + absl::StrJoin(oneof_fields, ",") + "]");
   }
-  return "[" + Join(oneof_entries, ",") + "]";
+  return "[" + absl::StrJoin(oneof_entries, ",") + "]";
 }
 
 std::string JSOneofArray(const GeneratorOptions& options,
@@ -1225,7 +1235,7 @@ std::string RelativeTypeName(const FieldDescriptor* field) {
   // prefix that yield common prefixes in the containing type's name and this
   // type's name.
   int prefix = 0;
-  for (int i = 0; i < type.size() && i < containing_type.size(); i++) {
+  for (size_t i = 0; i < type.size() && i < containing_type.size(); i++) {
     if (type[i] != containing_type[i]) {
       break;
     }
@@ -1276,7 +1286,7 @@ std::string FieldDefinition(const GeneratorOptions& options,
     } else {
       value_type = ProtoTypeName(options, value_field);
     }
-    return StringPrintf("map<%s, %s> %s = %d;", key_type.c_str(),
+    return absl::StrFormat("map<%s, %s> %s = %d;", key_type.c_str(),
                         value_type.c_str(), field->name().c_str(),
                         field->number());
   } else {
@@ -1295,7 +1305,7 @@ std::string FieldDefinition(const GeneratorOptions& options,
       type = ProtoTypeName(options, field);
       name = field->name();
     }
-    return StringPrintf("%s %s %s = %d;", qualifier.c_str(), type.c_str(),
+    return absl::StrFormat("%s %s %s = %d;", qualifier.c_str(), type.c_str(),
                         name.c_str(), field->number());
   }
 }
@@ -1389,7 +1399,7 @@ std::string GetPivot(const Descriptor* desc) {
                                                      : kDefaultPivot;
   }
 
-  return StrCat(pivot);
+  return absl::StrCat(pivot);
 }
 
 // Whether this field represents presence.  For fields with presence, we
@@ -1489,9 +1499,9 @@ void GenerateJspbFileOrder(const std::vector<const FileDescriptor*>& input,
   ordered->clear();
   std::set<const FileDescriptor*> seen;
   std::set<const FileDescriptor*> input_set;
-  for (int i = 0; i < input.size(); i++) {
-    DepthFirstSearch(input[i], ordered, &seen);
-    input_set.insert(input[i]);
+  for (auto c : input) {
+    DepthFirstSearch(c, ordered, &seen);
+    input_set.insert(c);
   }
 
   // Now remove the entries that are not actually in our input list.
@@ -1538,9 +1548,9 @@ bool GenerateJspbAllowedMap(const GeneratorOptions& options,
   // Choose the last descriptor for each filename.
   FileDeduplicator dedup(options);
   std::set<const SCC*> added;
-  for (int i = 0; i < files_ordered.size(); i++) {
-    for (int j = 0; j < files_ordered[i]->message_type_count(); j++) {
-      const Descriptor* desc = files_ordered[i]->message_type(j);
+  for (auto file : files_ordered) {
+    for (int j = 0; j < file->message_type_count(); j++) {
+      const Descriptor* desc = file->message_type(j);
       if (added.insert(analyzer->GetSCC(desc)).second &&
           !dedup.AddFile(
               std::make_pair(
@@ -1550,8 +1560,8 @@ bool GenerateJspbAllowedMap(const GeneratorOptions& options,
         return false;
       }
     }
-    for (int j = 0; j < files_ordered[i]->enum_type_count(); j++) {
-      const EnumDescriptor* desc = files_ordered[i]->enum_type(j);
+    for (int j = 0; j < file->enum_type_count(); j++) {
+      const EnumDescriptor* desc = file->enum_type(j);
       if (!dedup.AddFile(std::make_pair(GetEnumFileName(options, desc, false),
                                         GetEnumFileName(options, desc, true)),
                          desc)) {
@@ -1562,18 +1572,17 @@ bool GenerateJspbAllowedMap(const GeneratorOptions& options,
     // Pull out all free-floating extensions and generate files for those too.
     bool has_extension = false;
 
-    for (int j = 0; j < files_ordered[i]->extension_count(); j++) {
-      if (ShouldGenerateExtension(files_ordered[i]->extension(j))) {
+    for (int j = 0; j < file->extension_count(); j++) {
+      if (ShouldGenerateExtension(file->extension(j))) {
         has_extension = true;
       }
     }
 
     if (has_extension) {
       if (!dedup.AddFile(
-              std::make_pair(
-                  GetExtensionFileName(options, files_ordered[i], false),
-                  GetExtensionFileName(options, files_ordered[i], true)),
-              files_ordered[i])) {
+              std::make_pair(GetExtensionFileName(options, file, false),
+                             GetExtensionFileName(options, file, true)),
+              file)) {
         return false;
       }
     }
@@ -1592,7 +1601,7 @@ void EmbedCodeAnnotations(const GeneratedCodeInfo& annotations,
   std::string meta_content;
   annotations.SerializeToString(&meta_content);
   std::string meta_64;
-  Base64Escape(meta_content, &meta_64);
+  absl::Base64Escape(meta_content, &meta_64);
 
   // Print base64 encoded annotations at the end of output file in
   // a comment.
@@ -1601,7 +1610,7 @@ void EmbedCodeAnnotations(const GeneratedCodeInfo& annotations,
 }
 
 bool IsWellKnownTypeFile(const FileDescriptor* file) {
-  return HasPrefixString(file->name(), "google/protobuf/");
+  return absl::StartsWith(file->name(), "google/protobuf/");
 }
 
 }  // anonymous namespace
@@ -1646,8 +1655,8 @@ void Generator::FindProvides(const GeneratorOptions& options,
                              io::Printer* printer,
                              const std::vector<const FileDescriptor*>& files,
                              std::set<std::string>* provided) const {
-  for (int i = 0; i < files.size(); i++) {
-    FindProvidesForFile(options, printer, files[i], provided);
+  for (auto file : files) {
+    FindProvidesForFile(options, printer, file, provided);
   }
 
   printer->Print("\n");
@@ -1707,9 +1716,7 @@ void Generator::FindProvidesForFields(
     const GeneratorOptions& options, io::Printer* printer,
     const std::vector<const FieldDescriptor*>& fields,
     std::set<std::string>* provided) const {
-  for (int i = 0; i < fields.size(); i++) {
-    const FieldDescriptor* field = fields[i];
-
+  for (auto field : fields) {
     if (IgnoreField(field)) {
       continue;
     }
@@ -1743,7 +1750,7 @@ void Generator::GenerateProvides(const GeneratorOptions& options,
       if (options.import_style == GeneratorOptions::kImportCommonJsStrict) {
         std::string namespaceObject = *it;
         // Remove "proto." from the namespace object
-        GOOGLE_CHECK_EQ(0, namespaceObject.compare(0, 6, "proto."));
+        ABSL_CHECK_EQ(0, namespaceObject.compare(0, 6, "proto."));
         namespaceObject.erase(0, 6);
         printer->Print("goog.exportSymbol('$name$', null, proto);\n", "name",
                        namespaceObject);
@@ -1782,7 +1789,7 @@ void Generator::GenerateRequiresForLibrary(
     const GeneratorOptions& options, io::Printer* printer,
     const std::vector<const FileDescriptor*>& files,
     std::set<std::string>* provided) const {
-  GOOGLE_CHECK_OK(
+  ABSL_CHECK_EQ(
     options.import_style == GeneratorOptions::kImportClosure ||
     options.import_style == GeneratorOptions::kImportEs6);
   // For Closure imports we need to import every message type individually.
@@ -1792,25 +1799,25 @@ void Generator::GenerateRequiresForLibrary(
   bool have_map = false;
   bool have_message = false;
 
-  for (int i = 0; i < files.size(); i++) {
-    for (int j = 0; j < files[i]->message_type_count(); j++) {
-      const Descriptor* desc = files[i]->message_type(j);
+  for (auto file : files) {
+    for (int j = 0; j < file->message_type_count(); j++) {
+      const Descriptor* desc = file->message_type(j);
       if (!IgnoreMessage(desc)) {
         FindRequiresForMessage(options, desc, &required, &forwards,
                                &have_message);
       }
     }
 
-    if (!have_extensions && HasExtensions(files[i])) {
+    if (!have_extensions && HasExtensions(file)) {
       have_extensions = true;
     }
 
-    if (!have_map && FileHasMap(options, files[i])) {
+    if (!have_map && FileHasMap(options, file)) {
       have_map = true;
     }
 
-    for (int j = 0; j < files[i]->extension_count(); j++) {
-      const FieldDescriptor* extension = files[i]->extension(j);
+    for (int j = 0; j < file->extension_count(); j++) {
+      const FieldDescriptor* extension = file->extension(j);
       if (IgnoreField(extension)) {
         continue;
       }
@@ -1835,8 +1842,7 @@ void Generator::GenerateRequiresForExtensions(
     std::set<std::string>* provided) const {
   std::set<std::string> required;
   std::set<std::string> forwards;
-  for (int i = 0; i < fields.size(); i++) {
-    const FieldDescriptor* field = fields[i];
+  for (auto field : fields) {
     if (IgnoreField(field)) {
       continue;
     }
@@ -2413,7 +2419,7 @@ void Generator::GenerateFieldValueExpression(io::Printer* printer,
 
   const std::string with_default = use_default ? "WithDefault" : "";
   const std::string default_arg =
-      use_default ? StrCat(", ", JSFieldDefault(field)) : "";
+      use_default ? absl::StrCat(", ", JSFieldDefault(field)) : "";
   const std::string cardinality = field->is_repeated() ? "Repeated" : "";
   std::string type = "";
   if (is_float_or_double) {
@@ -2494,17 +2500,13 @@ void Generator::GenerateClassFieldToObject(const GeneratorOptions& options,
     printer->Print("msg.get$getter$()", "getter",
                    JSGetterName(options, field, BYTES_B64));
   } else {
-    bool use_default = field->has_default_value();
-
-    if (field->file()->syntax() == FileDescriptor::SYNTAX_PROTO3 &&
-        // Repeated fields get initialized to their default in the constructor
-        // (why?), so we emit a plain getField() call for them.
-        !field->is_repeated()) {
-      // Proto3 puts all defaults (including implicit defaults) in toObject().
-      // But for proto2 we leave the existing semantics unchanged: unset fields
-      // without default are unset.
-      use_default = true;
-    }
+    // We rely on the default field value if it is explicit in the .proto file
+    // or if the field in question doesn't have presence semantics (consider
+    // proto3 fields without optional, repeated fields)
+    // Repeated fields get initialized to their default in the constructor
+    // (why?), so we emit a plain getField() call for them.
+    const bool use_default = !field->is_repeated() &&
+                       (field->has_default_value() || !field->has_presence());
 
     // We don't implement this by calling the accessors, because the semantics
     // of the accessors are changing independently of the toObject() semantics.
@@ -3348,7 +3350,7 @@ void Generator::GenerateClassDeserializeBinaryField(
     const TypeNames& type_names,
     io::Printer* printer,
     const FieldDescriptor* field) const {
-  printer->Print("    case $num$:\n", "num", StrCat(field->number()));
+  printer->Print("    case $num$:\n", "num", absl::StrCat(field->number()));
 
   if (field->is_map()) {
     const FieldDescriptor* key_field = MapFieldKey(field);
@@ -3392,17 +3394,17 @@ void Generator::GenerateClassDeserializeBinaryField(
           (field->type() == FieldDescriptor::TYPE_GROUP) ? "Group" : "Message",
           "grpfield",
           (field->type() == FieldDescriptor::TYPE_GROUP)
-              ? (StrCat(field->number()) + ", ")
+              ? (absl::StrCat(field->number()) + ", ")
               : "");
     } else if (field->is_packable()) {
       printer->Print(
           "      var values = /** @type {$fieldtype$} */ "
           "(reader.isDelimited() "
-          "? reader.readPacked$reader$() : [reader.read$reader$()]);\n",
+          "? reader.read$reader$() : [reader.read$reader$()]);\n",
           "fieldtype",
           JSFieldTypeAnnotation(options, field, false, true,
                                 /* singular_if_not_packed */ false, BYTES_U8),
-          "reader", JSBinaryReaderMethodType(field));
+          "reader", JSBinaryReadWriteMethodName(field, /* is_writer=*/false));
     } else {
       printer->Print(
           "      var value = /** @type {$fieldtype$} */ "
@@ -3576,7 +3578,7 @@ void Generator::GenerateClassSerializeBinaryField(
     printer->Print(
         "    f.serializeBinary($index$, writer, "
         "$keyWriterFn$, $valueWriterFn$",
-        "index", StrCat(field->number()), "keyWriterFn",
+        "index", absl::StrCat(field->number()), "keyWriterFn",
         JSBinaryWriterMethodName(options, key_field), "valueWriterFn",
         JSBinaryWriterMethodName(options, value_field));
 
@@ -3592,7 +3594,7 @@ void Generator::GenerateClassSerializeBinaryField(
         "      $index$,\n"
         "      f",
         "method", JSBinaryReadWriteMethodName(field, /* is_writer = */ true),
-        "index", StrCat(field->number()));
+        "index", absl::StrCat(field->number()));
 
     if (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE &&
         !field->is_map()) {
@@ -3646,7 +3648,7 @@ void Generator::GenerateEnum(const GeneratorOptions& options,
   for (auto i : valid_index) {
     const EnumValueDescriptor* value = enumdesc->value(i);
     printer->Print("  $name$: $value$$comma$\n", "name",
-                   ToEnumCase(value->name()), "value", StrCat(value->number()),
+                   ToEnumCase(value->name()), "value", absl::StrCat(value->number()),
                    "comma", (i == valid_index.back()) ? "" : ",");
     printer->Annotate("name", value);
   }
@@ -3676,7 +3678,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       " * @type {!jspb.ExtensionFieldInfo<$extensionType$>}\n"
       " */\n"
       "$class$.$name$ = new jspb.ExtensionFieldInfo(\n",
-      "class", extension_scope_name, "name", extension_object_field_name, "extensionType", 
+      "class", extension_scope_name, "name", extension_object_field_name, "extensionType",
       JSFieldTypeAnnotation(options, field,
                             /* is_setter_argument = */ false,
                             /* force_present = */ true,
@@ -3690,7 +3692,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "!Object} */ (\n"
       "         $toObject$),\n"
       "    $repeated$);\n",
-      "index", StrCat(field->number()), "name", extension_object_field_name, "ctor",
+      "index", absl::StrCat(field->number()), "name", extension_object_field_name, "ctor",
       (field->cpp_type() == FieldDescriptor::CPPTYPE_MESSAGE
            ? type_names.SubmessageTypeRef(field)
            : std::string("null")),
@@ -3708,7 +3710,7 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "    $binaryWriterFn$,\n"
       "    $binaryMessageSerializeFn$,\n"
       "    $binaryMessageDeserializeFn$,\n",
-      "extendName", extension_object_name, "index", StrCat(field->number()),
+      "extendName", extension_object_name, "index", absl::StrCat(field->number()),
       "class", extension_scope_name, "name", extension_object_field_name,
       "binaryReaderFn", JSBinaryReaderMethodName(options, field),
       "binaryWriterFn", JSBinaryWriterMethodName(options, field),
@@ -3729,67 +3731,67 @@ void Generator::GenerateExtension(const GeneratorOptions& options,
       "// toObject() will function correctly.\n"
       "$extendName$[$index$] = $class$.$name$;\n"
       "\n",
-      "extendName", extension_object_name, "index", StrCat(field->number()),
+      "extendName", extension_object_name, "index", absl::StrCat(field->number()),
       "class", extension_scope_name, "name", extension_object_field_name);
 }
 
 bool GeneratorOptions::ParseFromOptions(
     const std::vector<std::pair<std::string, std::string> >& options,
     std::string* error) {
-  for (int i = 0; i < options.size(); i++) {
-    if (options[i].first == "add_require_for_enums") {
-      if (options[i].second != "") {
+  for (auto option : options) {
+    if (option.first == "add_require_for_enums") {
+      if (option.second != "") {
         *error = "Unexpected option value for add_require_for_enums";
         return false;
       }
       add_require_for_enums = true;
-    } else if (options[i].first == "binary") {
-      if (options[i].second != "") {
+    } else if (option.first == "binary") {
+      if (option.second != "") {
         *error = "Unexpected option value for binary";
         return false;
       }
       binary = true;
-    } else if (options[i].first == "testonly") {
-      if (options[i].second != "") {
+    } else if (option.first == "testonly") {
+      if (option.second != "") {
         *error = "Unexpected option value for testonly";
         return false;
       }
       testonly = true;
 
-    } else if (options[i].first == "error_on_name_conflict") {
-      GOOGLE_LOG(WARNING) << "Ignoring error_on_name_conflict option, this "
+    } else if (option.first == "error_on_name_conflict") {
+      ABSL_LOG(WARNING) << "Ignoring error_on_name_conflict option, this "
                              "will be removed in a future release";
-    } else if (options[i].first == "output_dir") {
-      output_dir = options[i].second;
-    } else if (options[i].first == "namespace_prefix") {
-      namespace_prefix = options[i].second;
-    } else if (options[i].first == "library") {
-      library = options[i].second;
-    } else if (options[i].first == "import_style") {
-      if (options[i].second == "closure") {
+    } else if (option.first == "output_dir") {
+      output_dir = option.second;
+    } else if (option.first == "namespace_prefix") {
+      namespace_prefix = option.second;
+    } else if (option.first == "library") {
+      library = option.second;
+    } else if (option.first == "import_style") {
+      if (option.second == "closure") {
         import_style = kImportClosure;
-      } else if (options[i].second == "commonjs") {
+      } else if (option.second == "commonjs") {
         import_style = kImportCommonJs;
-      } else if (options[i].second == "commonjs_strict") {
+      } else if (option.second == "commonjs_strict") {
         import_style = kImportCommonJsStrict;
-      } else if (options[i].second == "browser") {
+      } else if (option.second == "browser") {
         import_style = kImportBrowser;
-      } else if (options[i].second == "es6") {
+      } else if (option.second == "es6") {
         import_style = kImportEs6;
       } else {
-        *error = "Unknown import style " + options[i].second + ", expected " +
+        *error = "Unknown import style " + option.second + ", expected " +
                  "one of: closure, commonjs, browser, es6.";
       }
-    } else if (options[i].first == "extension") {
-      extension = options[i].second;
-    } else if (options[i].first == "one_output_file_per_input_file") {
-      if (!options[i].second.empty()) {
+    } else if (option.first == "extension") {
+      extension = option.second;
+    } else if (option.first == "one_output_file_per_input_file") {
+      if (!option.second.empty()) {
         *error = "Unexpected option value for one_output_file_per_input_file";
         return false;
       }
       one_output_file_per_input_file = true;
-    } else if (options[i].first == "annotate_code") {
-      if (!options[i].second.empty()) {
+    } else if (option.first == "annotate_code") {
+      if (!option.second.empty()) {
         *error = "Unexpected option value for annotate_code";
         return false;
       }
@@ -3797,11 +3799,11 @@ bool GeneratorOptions::ParseFromOptions(
     } else {
       // Assume any other option is an output directory, as long as it is a bare
       // `key` rather than a `key=value` option.
-      if (options[i].second != "") {
-        *error = "Unknown option: " + options[i].first;
+      if (option.second != "") {
+        *error = "Unknown option: " + option.first;
         return false;
       }
-      output_dir = options[i].first;
+      output_dir = option.first;
     }
   }
 
@@ -3846,8 +3848,8 @@ void Generator::GenerateFilesInDepOrder(
   std::set<const FileDescriptor*> all_files(files.begin(), files.end());
   // Track the in-progress set of files that have been generated already.
   std::set<const FileDescriptor*> generated;
-  for (int i = 0; i < files.size(); i++) {
-    GenerateFileAndDeps(options, printer, files[i], &all_files, &generated);
+  for (auto file : files) {
+    GenerateFileAndDeps(options, printer, file, &all_files, &generated);
   }
 }
 
@@ -3891,7 +3893,7 @@ bool Generator::GenerateFile(const FileDescriptor* file,
                                  ? file->name().substr(file->name().rfind('/'))
                                  : file->name());
   std::unique_ptr<io::ZeroCopyOutputStream> output(context->Open(filename));
-  GOOGLE_CHECK(output);
+  ABSL_CHECK(output);
   GeneratedCodeInfo annotations;
   io::AnnotationProtoCollector<GeneratedCodeInfo> annotation_collector(
       &annotations);
@@ -4245,7 +4247,7 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
     std::string filename = options.output_dir + "/" + options.library +
                            options.GetFileNameExtension();
     std::unique_ptr<io::ZeroCopyOutputStream> output(context->Open(filename));
-    GOOGLE_CHECK(output.get());
+    ABSL_CHECK(output.get());
     GeneratedCodeInfo annotations;
     io::AnnotationProtoCollector<GeneratedCodeInfo> annotation_collector(
         &annotations);
@@ -4256,9 +4258,9 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
     // Pull out all extensions -- we need these to generate all
     // provides/requires.
     std::vector<const FieldDescriptor*> extensions;
-    for (int i = 0; i < files.size(); i++) {
-      for (int j = 0; j < files[i]->extension_count(); j++) {
-        const FieldDescriptor* extension = files[i]->extension(j);
+    for (auto file : files) {
+      for (int j = 0; j < file->extension_count(); j++) {
+        const FieldDescriptor* extension = file->extension(j);
         extensions.push_back(extension);
       }
     }
@@ -4278,9 +4280,9 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
 
     GenerateFilesInDepOrder(options, &printer, files);
 
-    for (int i = 0; i < extensions.size(); i++) {
-      if (ShouldGenerateExtension(extensions[i])) {
-        GenerateExtension(options, type_names, &printer, extensions[i]);
+    for (auto extension : extensions) {
+      if (ShouldGenerateExtension(extension)) {
+        GenerateExtension(options, type_names, &printer, extension);
       }
     }
 
@@ -4300,8 +4302,7 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
     }
 
     bool generated = false;
-    for (int i = 0; i < files.size(); i++) {
-      const FileDescriptor* file = files[i];
+    for (auto file : files) {
       // Force well known type to generate in a whole file.
       if (IsWellKnownTypeFile(file)) {
         if (!GenerateFile(file, options, context, true)) {
@@ -4322,7 +4323,7 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
         const std::string& filename = allowed_map[scc];
         std::unique_ptr<io::ZeroCopyOutputStream> output(
             context->Open(filename));
-        GOOGLE_CHECK(output.get());
+        ABSL_CHECK(output.get());
         GeneratedCodeInfo annotations;
         io::AnnotationProtoCollector<GeneratedCodeInfo> annotation_collector(
             &annotations);
@@ -4375,7 +4376,7 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
         const std::string& filename = allowed_map[enumdesc];
         std::unique_ptr<io::ZeroCopyOutputStream> output(
             context->Open(filename));
-        GOOGLE_CHECK(output.get());
+        ABSL_CHECK(output.get());
         GeneratedCodeInfo annotations;
         io::AnnotationProtoCollector<GeneratedCodeInfo> annotation_collector(
             &annotations);
@@ -4407,7 +4408,7 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
 
         std::unique_ptr<io::ZeroCopyOutputStream> output(
             context->Open(filename));
-        GOOGLE_CHECK(output.get());
+        ABSL_CHECK(output.get());
         GeneratedCodeInfo annotations;
         io::AnnotationProtoCollector<GeneratedCodeInfo> annotation_collector(
             &annotations);
@@ -4420,9 +4421,9 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
         std::set<std::string> provided;
         std::vector<const FieldDescriptor*> fields;
 
-        for (int j = 0; j < files[i]->extension_count(); j++) {
-          if (ShouldGenerateExtension(files[i]->extension(j))) {
-            fields.push_back(files[i]->extension(j));
+        for (int j = 0; j < file->extension_count(); j++) {
+          if (ShouldGenerateExtension(file->extension(j))) {
+            fields.push_back(file->extension(j));
           }
         }
 
@@ -4431,9 +4432,9 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
         GenerateTestOnly(options, &printer);
         GenerateRequiresForExtensions(options, &printer, fields, &provided);
 
-        for (int j = 0; j < files[i]->extension_count(); j++) {
-          if (ShouldGenerateExtension(files[i]->extension(j))) {
-            GenerateExtension(options, type_names, &printer, files[i]->extension(j));
+        for (int j = 0; j < file->extension_count(); j++) {
+          if (ShouldGenerateExtension(file->extension(j))) {
+            GenerateExtension(options, type_names, &printer, file->extension(j));
           }
         }
         if (options.annotate_code) {
@@ -4450,8 +4451,7 @@ bool Generator::GenerateAll(const std::vector<const FileDescriptor*>& files,
   } else /* options.output_mode() == kOneOutputFilePerInputFile */ {
     // Generate one output file per input (.proto) file.
 
-    for (int i = 0; i < files.size(); i++) {
-      const FileDescriptor* file = files[i];
+    for (auto file : files) {
       if (!GenerateFile(file, options, context, false)) {
         return false;
       }

@@ -1,6 +1,6 @@
 // Protocol Buffers - Google's data interchange format
 // Copyright 2008 Google Inc.  All rights reserved.
-// https://developers.google.com/protocol-buffers/
+// https://protobuf.dev/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -52,11 +52,31 @@ goog.require('jspb.BinaryConstants');
 goog.require('jspb.BinaryDecoder');
 goog.require('jspb.utils');
 
+/**
+ * Whether to enforce that string fields are valid utf8.
+ *
+ * <p>Currently set to `ALWAYS`, can be set to `DEPRECATED_PROTO3_ONLY` to only
+ * enforce utf8 for proto3 string fields, for proto2 string fields it will use
+ * replacement characters when encoding errors are found.
+ *
+ * <p>TODO: Remove the flag, simplify BinaryReader to remove
+ * readStringRequireUtf8 and related support in the code generator et. al.
+ *
+ * @define {string}
+ */
+const ENFORCE_UTF8 = goog.define('jspb.binary.ENFORCE_UTF8', 'ALWAYS');
+
+// Constrain the set of values to only these two.
+jspb.asserts.assert(
+  ENFORCE_UTF8 === 'DEPRECATED_PROTO3_ONLY' || ENFORCE_UTF8 === 'ALWAYS');
+
+const /** boolean */ UTF8_PARSING_ERRORS_ARE_FATAL = ENFORCE_UTF8 === 'ALWAYS';
+
 
 
 /**
  * BinaryReader implements the decoders for all the wire types specified in
- * https://developers.google.com/protocol-buffers/docs/encoding.
+ * https://protobuf.dev/programming-guides/encoding/.
  *
  * @param {jspb.ByteSource=} opt_bytes The bytes we're reading from.
  * @param {number=} opt_start The optional offset to start reading at.
@@ -996,10 +1016,29 @@ jspb.BinaryReader.prototype.readEnum = function() {
  * @export
  */
 jspb.BinaryReader.prototype.readString = function() {
+  // delegate to the other reader so that inlining can eliminate this method
+  // in the common case.
+  if (UTF8_PARSING_ERRORS_ARE_FATAL) {
+    return this.readStringRequireUtf8();
+  }
+
   jspb.asserts.assert(
       this.nextWireType_ == jspb.BinaryConstants.WireType.DELIMITED);
   var length = this.decoder_.readUnsignedVarint32();
-  return this.decoder_.readString(length);
+  return this.decoder_.readString(length, /*requireUtf8=*/ false);
+};
+
+/**
+ * Reads a string field from the binary stream, or throws an error if the next
+ * field in the stream is not of the correct wire type, or if the string is
+ * not valid utf8.
+ *
+ * @return {string} The value of the string field.
+ */
+jspb.BinaryReader.prototype.readStringRequireUtf8 = function () {
+  jspb.asserts.assert(this.nextWireType_ == jspb.BinaryConstants.WireType.DELIMITED);
+  const length = this.decoder_.readUnsignedVarint32();
+  return this.decoder_.readString(length, /*requireUtf8=*/ true);
 };
 
 
